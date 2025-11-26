@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sentiment Analysis Results</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+<div class="container">
+    <h1 class="mb-4">Sentiment Analysis Results</h1>
+
+    <div class="mb-3">
+        <a href="/metrics" class="btn btn-primary">View Model Performance Metrics</a>
+        <a href="/download_metrics" class="btn btn-secondary">Download Metrics Report</a>
+        <a href="/download" class="btn btn-success">Download Results</a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <canvas id="sentimentChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <canvas id="reviewTypeChart"></canvas>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <canvas id="groupedSentimentChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+fetch('/get_chart_data')
+    .then(res => res.json())
+    .then(data => {
+        // Pie Chart - Sentiment Distribution
+        new Chart(document.getElementById("sentimentChart"), {
+            type: "doughnut",
+            data: {
+                labels: Object.keys(data.sentiment),
+                datasets: [{
+                    data: Object.values(data.sentiment),
+                    backgroundColor: ["#28a745", "#ffc107", "#dc3545"]
+                }]
+            },
+            options: {
+                plugins: { title: { display: true, text: "Sentiment Distribution" } },
+                responsive: true
+            }
+        });
+
+        // Pie Chart - Review Type Distribution
+        new Chart(document.getElementById("reviewTypeChart"), {
+            type: "pie",
+            data: {
+                labels: Object.keys(data.review_type),
+                datasets: [{
+                    data: Object.values(data.review_type),
+                    backgroundColor: ["#007bff", "#6c757d"]
+                }]
+            },
+            options: {
+                plugins: { title: { display: true, text: "Review Type Distribution" } },
+                responsive: true
+            }
+        });
+
+        // Grouped Bar Chart
+        const labels = data.grouped.map(d => d.type);
+        new Chart(document.getElementById("groupedSentimentChart"), {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Positive",
+                        backgroundColor: "#28a745",
+                        data: data.grouped.map(d => d.Positive)
+                    },
+                    {
+                        label: "Neutral",
+                        backgroundColor: "#ffc107",
+                        data: data.grouped.map(d => d.Neutral)
+                    },
+                    {
+                        label: "Negative",
+                        backgroundColor: "#dc3545",
+                        data: data.grouped.map(d => d.Negative)
+                    }
+                ]
+            },
+            options: {
+                plugins: { title: { display: true, text: "Sentiment by Review Type" } },
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>
